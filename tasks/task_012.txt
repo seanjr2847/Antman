@@ -1,0 +1,11 @@
+# Task ID: 12
+# Title: Build Artifact Creation UI
+# Status: pending
+# Dependencies: 5, 10, 11
+# Priority: medium
+# Description: Develop web interfaces for artifact creation, including project selection, artifact type, and output format options.
+# Details:
+Use Django templates and HTMX for dynamic UI. Implement artifact creation views with project selection, artifact type, and output format options. Add validation and feedback.
+
+# Test Strategy:
+Test UI functionality manually and with automated browser tests. Verify project selection, artifact type, and output format handling.

@@ -1,0 +1,403 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Setup Project Repository and Initial Django Project",
+      "description": "Initialize the Django project repository with recommended structure, including apps, core, templates, static, and media directories. Set up Docker and Nginx configurations for local development.",
+      "details": "Create a new Django project using Django 4.2 or later. Organize the project as per the PRD directory structure. Set up Dockerfile and docker-compose.yml for containerized development. Configure Nginx for static file serving. Use Python 3.10+ and Django 4.2+ for best compatibility and security. Initialize git repository and add .gitignore for Python/Django projects.",
+      "testStrategy": "Verify project creation by running the development server and accessing the default Django welcome page. Test Docker build and run commands to ensure containers start without errors.",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Initialize Repository and Project Structure",
+          "description": "Set up Git repository with proper .gitignore and create the Django project with recommended structure",
+          "dependencies": [],
+          "details": "Create a new Git repository and initialize it with a comprehensive .gitignore file for Python/Django projects. Create the Django project using the latest compatible version. Organize the project structure following best practices with separate directories for apps, core functionality, templates, static files, and media. Include unit test directory structure.",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Containerize Django Application",
+          "description": "Create Dockerfile and docker-compose.yml for the Django application",
+          "dependencies": [
+            1
+          ],
+          "details": "Write a Dockerfile that properly sets up the Python environment, installs dependencies, and configures the Django application. Create a docker-compose.yml file that defines services for Django, PostgreSQL database, and Redis for caching. Include volume configurations for data persistence and proper networking between containers. Add environment variable configuration through .env files.",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Configure Nginx Reverse Proxy",
+          "description": "Set up Nginx for serving static/media files and routing requests to Django",
+          "dependencies": [
+            2
+          ],
+          "details": "Create Nginx configuration files to serve as a reverse proxy for the Django application. Configure proper routing for static and media files. Set up SSL/TLS certificates for secure connections. Ensure proper caching headers and compression settings. Add the Nginx service to the docker-compose.yml file with appropriate links to the Django service.",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Implement Automated Testing Framework",
+          "description": "Set up comprehensive testing infrastructure with test cases",
+          "dependencies": [
+            1
+          ],
+          "details": "Implement unit tests for Django models, views, and forms. Create integration tests for API endpoints. Set up test fixtures and factories for consistent test data. Configure test coverage reporting. Implement automated UI testing if applicable. Ensure tests can run both locally and in CI/CD pipeline.",
+          "status": "done"
+        },
+        {
+          "id": 5,
+          "title": "Implement CI/CD Pipeline",
+          "description": "Set up continuous integration and deployment workflow",
+          "dependencies": [
+            2,
+            3,
+            4
+          ],
+          "details": "Create GitHub Actions or similar CI/CD workflow files. Configure pipeline stages for linting, testing, building Docker images, and deployment. Set up automated security scanning for dependencies and Docker images. Configure deployment to staging and production environments with proper approval gates. Implement rollback mechanisms for failed deployments.\n<info added on 2025-05-25T08:32:46.506Z>\nCI/CD 파이프라인 구현이 완료되었습니다. 주요 구현 사항:\n\n1. GitLab CI/CD 파이프라인 (.gitlab-ci.yml)\n   - 5단계: lint, test, build, security, deploy\n   - Python 코드 품질 검사 (ruff, black, isort)\n   - 테스트 실행 및 커버리지 측정\n   - Docker 이미지 빌드 및 푸시\n   - 보안 스캔 (의존성, 컨테이너)\n   - Staging/Production 배포 및 롤백\n\n2. 배포 자동화 스크립트\n   - deploy.sh: 환경별 배포\n   - rollback.sh: 롤백 메커니즘\n   - backup.sh: 데이터베이스 백업\n\n3. Docker 환경 설정\n   - docker-compose.staging.yml 및 docker-compose.production.yml\n   - Health check 엔드포인트\n\n4. 이메일 알림 시스템\n   - 중요 이벤트에 대한 이메일 알림\n\n5. CI/CD 파이프라인 검증 테스트 및 설정/스크립트 존재 확인 테스트 구현\n\n모든 요구사항이 성공적으로 구현되어 작업이 완료되었습니다.\n</info added on 2025-05-25T08:32:46.506Z>",
+          "status": "done"
+        },
+        {
+          "id": 6,
+          "title": "Implement Code Generation and Error Handling",
+          "description": "Set up code generation tools and comprehensive error handling",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Configure tools for generating boilerplate code for models, views, and serializers. Implement comprehensive error handling and logging throughout the application. Set up centralized error tracking and monitoring. Create custom middleware for request/response logging. Implement automated code quality checks and formatting.",
+          "status": "pending"
+        },
+        {
+          "id": 7,
+          "title": "Final Verification and Documentation",
+          "description": "Perform comprehensive testing and create documentation",
+          "dependencies": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "details": "Conduct end-to-end testing of the entire system. Verify compatibility across different environments. Create comprehensive documentation including setup instructions, architecture diagrams, API documentation, and deployment guides. Implement health check endpoints and monitoring. Perform load testing to verify system performance under stress.",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Configure Django Settings for Multiple Environments",
+      "description": "Set up environment-specific Django settings for development, production, and base configurations. Use environment variables for sensitive data.",
+      "details": "Create settings/base.py, settings/development.py, and settings/production.py. Use django-environ (v0.11.2+) to manage environment variables. Store sensitive data (DB credentials, API keys) securely. Configure allowed hosts, debug mode, and static/media file paths per environment.",
+      "testStrategy": "Test settings loading by running the server with different environment variables. Ensure sensitive data is not exposed in source code.",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 3,
+      "title": "Implement User Authentication and Authorization",
+      "description": "Develop user authentication and authorization logic, including admin and regular user roles, and project-user mapping.",
+      "details": "Use Django’s built-in authentication system. Extend User model if needed (e.g., for is_admin flag). Create ProjectUser model for project-user mapping. Implement login, logout, and permission checks. Use Django’s admin site for user management.",
+      "testStrategy": "Test user registration, login, logout, and role-based access. Verify admin and regular user permissions. Test project-user mapping.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 4,
+      "title": "Design and Implement Project Management Models and Services",
+      "description": "Create models and services for project management, including project, user, and project-user mapping tables.",
+      "details": "Implement Project, User, and ProjectUser models as per PRD schema. Add CRUD services for project management. Use Django ORM for database operations. Ensure data validation and error handling.",
+      "testStrategy": "Write unit tests for model creation, update, delete, and validation. Test project-user mapping logic.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        3
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 5,
+      "title": "Develop Project Management UI",
+      "description": "Build web interfaces for project management, including project list, create, edit, and delete functionality.",
+      "details": "Use Django templates and HTMX for dynamic UI. Implement project list, create, edit, and delete views. Add search and pagination. Ensure UI is responsive and accessible.",
+      "testStrategy": "Test UI functionality manually and with automated browser tests. Verify search, pagination, and CRUD operations.",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 6,
+      "title": "Implement GitLab API Integration",
+      "description": "Integrate GitLab API for project source code access and analysis.",
+      "details": "Use python-gitlab (v4.0.0+) for GitLab API integration. Implement OAuth authentication. Add services for cloning repositories and fetching code metadata. Store GitLab credentials securely using environment variables.",
+      "testStrategy": "Test GitLab API authentication, repository cloning, and metadata fetching. Verify error handling and credential security.",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 7,
+      "title": "Develop Database Connector Abstraction Layer",
+      "description": "Create a database connector abstraction layer supporting Oracle and PostgreSQL.",
+      "details": "Implement oracle_connector.py and postgresql_connector.py in core/db. Use SQLAlchemy (v2.0+) or Django’s DB backends for abstraction. Encrypt connection strings. Support read-only access for security.",
+      "testStrategy": "Test database connection, query execution, and error handling for both Oracle and PostgreSQL. Verify encryption and read-only access.",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 8,
+      "title": "Build Web Scraping Engine with Selenium",
+      "description": "Develop a web scraping engine using Selenium for automated login and menu navigation.",
+      "details": "Use Selenium (v4.0+) for headless browser automation. Implement selenium_manager.py and iframe_handler.py in core/scraper. Support project-specific login and IFRAME navigation. Store web credentials securely.",
+      "testStrategy": "Test automated login, IFRAME navigation, and menu access. Verify credential security and error handling.",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 9,
+      "title": "Develop Source Code Static Analysis Engine",
+      "description": "Create a static analysis engine for JS, JSP, Java, and XML files.",
+      "details": "Implement analyzers for each file type in core/analyzer. Use libraries like javalang for Java, js2py for JS, and lxml for XML. Parse code structure and extract metadata for documentation.",
+      "testStrategy": "Test analysis of sample JS, JSP, Java, and XML files. Verify metadata extraction and error handling.",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 10,
+      "title": "Design and Implement Artifact Management Models and Services",
+      "description": "Create models and services for artifact management, including artifact types and content storage.",
+      "details": "Implement Artifact model as per PRD schema. Add CRUD services for artifact management. Support artifact type validation and content storage. Use Django ORM for database operations.",
+      "testStrategy": "Write unit tests for artifact creation, update, delete, and validation. Test artifact type handling and content storage.",
+      "priority": "medium",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 11,
+      "title": "Develop Artifact Generation Logic for Each Output Type",
+      "description": "Implement logic to generate each type of CBD artifact (e.g., test scenarios, manuals, diagrams) from collected data.",
+      "details": "For each artifact type (unit test, integration test, user manual, etc.), implement generation logic in artifacts/services.py. Use templates for Word, Excel, PDF, Visio, and PowerPoint output. Integrate with analysis and scraping engines.",
+      "testStrategy": "Test generation of each artifact type with sample data. Verify output format and content accuracy.",
+      "priority": "medium",
+      "dependencies": [
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 12,
+      "title": "Build Artifact Creation UI",
+      "description": "Develop web interfaces for artifact creation, including project selection, artifact type, and output format options.",
+      "details": "Use Django templates and HTMX for dynamic UI. Implement artifact creation views with project selection, artifact type, and output format options. Add validation and feedback.",
+      "testStrategy": "Test UI functionality manually and with automated browser tests. Verify project selection, artifact type, and output format handling.",
+      "priority": "medium",
+      "dependencies": [
+        5,
+        10,
+        11
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 13,
+      "title": "Implement Document Storage and Download Functionality",
+      "description": "Add functionality to store generated artifacts in the database and provide download links to users.",
+      "details": "Store artifact content in the Artifact model. Implement file storage for large documents. Add download views with permission checks. Use Django’s FileField or external storage (e.g., S3) for scalability.",
+      "testStrategy": "Test artifact storage and retrieval. Verify download functionality and permission checks.",
+      "priority": "medium",
+      "dependencies": [
+        10,
+        11,
+        12
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 14,
+      "title": "Develop Dashboard and Navigation UI",
+      "description": "Build the main dashboard and navigation UI for the application.",
+      "details": "Implement dashboard view with project status and recent artifacts. Add navigation menu for projects, users, and artifacts. Use HTMX for dynamic updates. Ensure responsive design.",
+      "testStrategy": "Test dashboard and navigation UI manually and with automated browser tests. Verify dynamic updates and responsiveness.",
+      "priority": "medium",
+      "dependencies": [
+        5,
+        12
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 15,
+      "title": "Implement User Management UI",
+      "description": "Build web interfaces for user management, including user list, create, edit, and delete functionality.",
+      "details": "Use Django templates and HTMX for dynamic UI. Implement user list, create, edit, and delete views. Add search and pagination. Ensure admin-only access.",
+      "testStrategy": "Test UI functionality manually and with automated browser tests. Verify admin-only access and CRUD operations.",
+      "priority": "medium",
+      "dependencies": [
+        3,
+        5
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 16,
+      "title": "Add Automated Testing and CI/CD Pipeline",
+      "description": "Set up automated testing and continuous integration/deployment pipeline.",
+      "details": "Configure pytest for unit and integration tests. Add GitHub Actions or GitLab CI for automated testing and deployment. Include linting and security scanning.",
+      "testStrategy": "Run automated tests on code push. Verify test coverage and pipeline success.",
+      "priority": "low",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        10
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 17,
+      "title": "Implement Performance Optimization and Caching",
+      "description": "Add performance optimization and caching strategies for high-traffic scenarios.",
+      "details": "Use Django’s cache framework for view and template caching. Consider CDN for static files. Optimize database queries with select_related and prefetch_related. Use django-compressor and whitenoise for static file optimization.",
+      "testStrategy": "Test application performance under load. Verify caching and CDN integration.",
+      "priority": "low",
+      "dependencies": [
+        1,
+        2,
+        4,
+        10
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 18,
+      "title": "Document Code and Project Structure",
+      "description": "Document code, project structure, and usage instructions.",
+      "details": "Add docstrings to all modules, classes, and methods as per PRD guidelines. Write README.md and project documentation in docs/. Include setup, deployment, and usage instructions.",
+      "testStrategy": "Review documentation for completeness and accuracy. Verify docstring coverage.",
+      "priority": "low",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        10
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 19,
+      "title": "Implement Security Best Practices",
+      "description": "Apply security best practices across the application.",
+      "details": "Use HTTPS, secure cookies, and CSRF protection. Validate all user inputs. Encrypt sensitive data. Regularly update dependencies. Implement rate limiting and logging.",
+      "testStrategy": "Perform security scans and penetration testing. Verify input validation and data encryption.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        10
+      ],
+      "status": "pending",
+      "subtasks": []
+    },
+    {
+      "id": 20,
+      "title": "Final Integration and End-to-End Testing",
+      "description": "Perform final integration and end-to-end testing of the entire application.",
+      "details": "Test all features together, including user authentication, project management, artifact generation, and document download. Verify cross-browser compatibility and accessibility.",
+      "testStrategy": "Conduct manual and automated end-to-end tests. Verify all requirements from the PRD are met.",
+      "priority": "high",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "status": "pending",
+      "subtasks": []
+    }
+  ]
+}

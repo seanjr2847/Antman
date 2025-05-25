@@ -1,0 +1,11 @@
+# Task ID: 3
+# Title: Implement User Authentication and Authorization
+# Status: pending
+# Dependencies: 1, 2
+# Priority: high
+# Description: Develop user authentication and authorization logic, including admin and regular user roles, and project-user mapping.
+# Details:
+Use Django’s built-in authentication system. Extend User model if needed (e.g., for is_admin flag). Create ProjectUser model for project-user mapping. Implement login, logout, and permission checks. Use Django’s admin site for user management.
+
+# Test Strategy:
+Test user registration, login, logout, and role-based access. Verify admin and regular user permissions. Test project-user mapping.

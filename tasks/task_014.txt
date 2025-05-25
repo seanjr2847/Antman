@@ -1,0 +1,11 @@
+# Task ID: 14
+# Title: Develop Dashboard and Navigation UI
+# Status: pending
+# Dependencies: 5, 12
+# Priority: medium
+# Description: Build the main dashboard and navigation UI for the application.
+# Details:
+Implement dashboard view with project status and recent artifacts. Add navigation menu for projects, users, and artifacts. Use HTMX for dynamic updates. Ensure responsive design.
+
+# Test Strategy:
+Test dashboard and navigation UI manually and with automated browser tests. Verify dynamic updates and responsiveness.

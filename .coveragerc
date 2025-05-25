@@ -1,0 +1,32 @@
+[run]
+source = apps,core,antman
+omit = 
+    */migrations/*
+    */tests/*
+    */test_*.py
+    */testing.py
+    */wsgi.py
+    */asgi.py
+    */settings.py
+    */test_settings.py
+    */urls.py
+    */admin.py
+    */apps.py
+    manage.py
+    conftest.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if settings.DEBUG
+    raise ImportError
+    if 0:
+    if __name__ == .__main__.:
+    pass
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+
+[html]
+directory = htmlcov

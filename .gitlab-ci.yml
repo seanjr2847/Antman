@@ -1,0 +1,296 @@
+# GitLab CI/CD Pipeline Configuration
+# Antman Project - AI Coding Assistant Platform
+
+variables:
+  # Docker 설정
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  
+  # 레지스트리 설정
+  CI_REGISTRY: registry.gitlab.com
+  DOCKER_REGISTRY: ${CI_REGISTRY}/${CI_PROJECT_PATH}
+  
+  # Python 설정
+  PYTHON_VERSION: "3.11"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  
+  # Django 설정
+  DJANGO_SETTINGS_MODULE: "core.settings.test"
+  
+  # 알림 설정 (CI 변수로 설정)
+  NOTIFICATION_EMAIL: "admin@antman.ai"
+  
+  # 캐시 설정
+  CACHE_VERSION: "1"
+
+# 파이프라인 단계
+stages:
+  - lint
+  - test
+  - build
+  - security
+  - deploy
+
+# 캐시 설정
+.python_cache: &python_cache
+  key:
+    files:
+      - requirements.txt
+      - requirements-dev.txt
+    prefix: ${CACHE_VERSION}-python
+  paths:
+    - .cache/pip
+    - venv/
+
+# Lint 작업
+lint:
+  stage: lint
+  image: python:${PYTHON_VERSION}
+  cache:
+    <<: *python_cache
+  before_script:
+    - pip install --upgrade pip
+    - pip install -r requirements-dev.txt
+  script:
+    - echo "Running code quality checks..."
+    - ruff check .
+    - black --check .
+    - isort --check-only .
+    - echo "All linting checks passed!"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# 테스트 작업
+test:
+  stage: test
+  image: python:${PYTHON_VERSION}
+  services:
+    - postgres:15-alpine
+    - redis:7-alpine
+  variables:
+    POSTGRES_DB: antman_test
+    POSTGRES_USER: antman
+    POSTGRES_PASSWORD: testpass
+    DATABASE_URL: "postgresql://antman:testpass@postgres:5432/antman_test"
+    REDIS_URL: "redis://redis:6379/0"
+  cache:
+    <<: *python_cache
+  before_script:
+    - apt-get update && apt-get install -y postgresql-client mailutils
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+    - pip install -r requirements-dev.txt
+    - pip install mail-parser
+  script:
+    - echo "Running tests with coverage..."
+    - pytest --cov=. --cov-report=xml --cov-report=html --cov-report=term --junitxml=report.xml
+    - echo "Test coverage report generated"
+  coverage: '/(?i)total.*? (100(?:\.0+)?\s*%|[1-9]?\d(?:\.\d+)?\s*%)$/'
+  artifacts:
+    when: always
+    paths:
+      - htmlcov/
+      - coverage.xml
+      - report.xml
+    reports:
+      junit: report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    expire_in: 1 week
+  after_script:
+    # 실패 시 이메일 알림
+    - |
+      if [ "$CI_JOB_STATUS" == "failed" ]; then
+        echo "Test failed in $CI_PROJECT_NAME - $CI_COMMIT_REF_NAME" | \
+        mail -s "❌ Test Failed: $CI_PROJECT_NAME" $NOTIFICATION_EMAIL
+      fi
+
+# Docker 빌드 작업
+build-docker:
+  stage: build
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "Building Docker image..."
+    - docker build -t $DOCKER_REGISTRY:$CI_COMMIT_SHA .
+    - docker tag $DOCKER_REGISTRY:$CI_COMMIT_SHA $DOCKER_REGISTRY:latest
+    - echo "Pushing Docker image..."
+    - docker push $DOCKER_REGISTRY:$CI_COMMIT_SHA
+    - docker push $DOCKER_REGISTRY:latest
+  after_script:
+    # 실패 시 알림
+    - |
+      if [ "$CI_JOB_STATUS" == "failed" ]; then
+        echo "Docker build failed in $CI_PROJECT_NAME - $CI_COMMIT_REF_NAME" | \
+        mail -s "❌ Docker Build Failed: $CI_PROJECT_NAME" $NOTIFICATION_EMAIL
+      fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+
+# 의존성 스캔
+dependency-scan:
+  stage: security
+  image: python:${PYTHON_VERSION}
+  script:
+    - pip install safety bandit pip-audit
+    - echo "Scanning Python dependencies..."
+    - safety check --json > safety-report.json || true
+    - bandit -r . -f json -o bandit-report.json || true
+    - pip-audit --desc --format json > pip-audit-report.json || true
+  artifacts:
+    reports:
+      dependency_scanning: 
+        - safety-report.json
+        - pip-audit-report.json
+    paths:
+      - "*-report.json"
+    expire_in: 1 week
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+
+# 컨테이너 스캔
+container-scan:
+  stage: security
+  image: aquasec/trivy:latest
+  services:
+    - docker:24-dind
+  script:
+    - trivy image --exit-code 0 --format json --output trivy-report.json $DOCKER_REGISTRY:$CI_COMMIT_SHA
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL $DOCKER_REGISTRY:$CI_COMMIT_SHA
+  artifacts:
+    reports:
+      container_scanning: trivy-report.json
+    paths:
+      - trivy-report.json
+    expire_in: 1 week
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+  needs:
+    - build-docker
+
+# Staging 배포
+deploy-staging:
+  stage: deploy
+  image: alpine:latest
+  environment:
+    name: staging
+    url: https://staging.antman.ai
+  before_script:
+    - apk add --no-cache openssh-client curl bash mailutils
+    - eval $(ssh-agent -s)
+    - echo "$STAGING_SSH_PRIVATE_KEY" | ssh-add -
+    - mkdir -p ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  script:
+    - echo "Deploying to staging environment..."
+    - ./scripts/deploy.sh staging $CI_COMMIT_SHA
+  after_script:
+    # 알림
+    - |
+      if [ "$CI_JOB_STATUS" == "success" ]; then
+        echo "Successfully deployed to staging: $CI_COMMIT_SHA" | \
+        mail -s "✅ Staging Deployment Success: $CI_PROJECT_NAME" $NOTIFICATION_EMAIL
+      else
+        echo "Staging deployment failed: $CI_COMMIT_SHA" | \
+        mail -s "❌ Staging Deployment Failed: $CI_PROJECT_NAME" $NOTIFICATION_EMAIL
+      fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  needs:
+    - test
+    - build-docker
+    - dependency-scan
+    - container-scan
+
+# Production 배포
+deploy-production:
+  stage: deploy
+  image: alpine:latest
+  environment:
+    name: production
+    url: https://antman.ai
+  when: manual
+  before_script:
+    - apk add --no-cache openssh-client curl bash mailutils
+    - eval $(ssh-agent -s)
+    - echo "$PRODUCTION_SSH_PRIVATE_KEY" | ssh-add -
+    - mkdir -p ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  script:
+    - echo "Deploying to production environment..."
+    - ./scripts/deploy.sh production $CI_COMMIT_SHA
+  after_script:
+    # 알림
+    - |
+      if [ "$CI_JOB_STATUS" == "success" ]; then
+        echo "Successfully deployed to production: $CI_COMMIT_SHA" | \
+        mail -s "🚀 Production Deployment Success: $CI_PROJECT_NAME" $NOTIFICATION_EMAIL
+      else
+        echo "Production deployment failed: $CI_COMMIT_SHA" | \
+        mail -s "❌ Production Deployment Failed: $CI_PROJECT_NAME" $NOTIFICATION_EMAIL
+      fi
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  needs:
+    - deploy-staging
+
+# Staging 롤백
+rollback-staging:
+  stage: deploy
+  image: alpine:latest
+  environment:
+    name: staging
+    url: https://staging.antman.ai
+    action: stop
+  when: manual
+  before_script:
+    - apk add --no-cache openssh-client curl bash mailutils
+    - eval $(ssh-agent -s)
+    - echo "$STAGING_SSH_PRIVATE_KEY" | ssh-add -
+    - mkdir -p ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  script:
+    - echo "Rolling back staging environment..."
+    - ./scripts/rollback.sh staging
+  after_script:
+    - |
+      echo "Staging rollback completed" | \
+      mail -s "⏪ Staging Rollback: $CI_PROJECT_NAME" $NOTIFICATION_EMAIL
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# Production 롤백
+rollback-production:
+  stage: deploy
+  image: alpine:latest
+  environment:
+    name: production
+    url: https://antman.ai
+    action: stop
+  when: manual
+  before_script:
+    - apk add --no-cache openssh-client curl bash mailutils
+    - eval $(ssh-agent -s)
+    - echo "$PRODUCTION_SSH_PRIVATE_KEY" | ssh-add -
+    - mkdir -p ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  script:
+    - echo "Rolling back production environment..."
+    - ./scripts/rollback.sh production
+  after_script:
+    - |
+      echo "Production rollback completed" | \
+      mail -s "⏪ Production Rollback: $CI_PROJECT_NAME" $NOTIFICATION_EMAIL
+  rules:
+    - if: '$CI_COMMIT_TAG'

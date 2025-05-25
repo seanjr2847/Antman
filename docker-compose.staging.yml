@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  web:
+    image: ${DOCKER_REGISTRY}:${DOCKER_IMAGE_TAG:-latest}
+    container_name: antman_web_staging
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings.staging
+      - DATABASE_URL=postgresql://antman:${POSTGRES_PASSWORD}@db:5432/antman_staging
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=False
+      - ALLOWED_HOSTS=staging.antman.ai,localhost
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    networks:
+      - antman_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  db:
+    image: postgres:15-alpine
+    container_name: antman_db_staging
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=antman_staging
+      - POSTGRES_USER=antman
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - antman_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U antman -d antman_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: antman_redis_staging
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - antman_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: antman_nginx_staging
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/staging.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/var/www/static
+      - media_volume:/var/www/media
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - web
+    networks:
+      - antman_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:
+
+networks:
+  antman_network:
+    driver: bridge

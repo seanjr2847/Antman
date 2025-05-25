@@ -1,0 +1,11 @@
+# Task ID: 7
+# Title: Develop Database Connector Abstraction Layer
+# Status: pending
+# Dependencies: 1, 2, 3, 4
+# Priority: medium
+# Description: Create a database connector abstraction layer supporting Oracle and PostgreSQL.
+# Details:
+Implement oracle_connector.py and postgresql_connector.py in core/db. Use SQLAlchemy (v2.0+) or Django’s DB backends for abstraction. Encrypt connection strings. Support read-only access for security.
+
+# Test Strategy:
+Test database connection, query execution, and error handling for both Oracle and PostgreSQL. Verify encryption and read-only access.

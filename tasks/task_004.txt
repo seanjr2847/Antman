@@ -1,0 +1,11 @@
+# Task ID: 4
+# Title: Design and Implement Project Management Models and Services
+# Status: pending
+# Dependencies: 1, 2, 3
+# Priority: high
+# Description: Create models and services for project management, including project, user, and project-user mapping tables.
+# Details:
+Implement Project, User, and ProjectUser models as per PRD schema. Add CRUD services for project management. Use Django ORM for database operations. Ensure data validation and error handling.
+
+# Test Strategy:
+Write unit tests for model creation, update, delete, and validation. Test project-user mapping logic.

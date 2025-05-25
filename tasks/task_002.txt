@@ -1,0 +1,11 @@
+# Task ID: 2
+# Title: Configure Django Settings for Multiple Environments
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Set up environment-specific Django settings for development, production, and base configurations. Use environment variables for sensitive data.
+# Details:
+Create settings/base.py, settings/development.py, and settings/production.py. Use django-environ (v0.11.2+) to manage environment variables. Store sensitive data (DB credentials, API keys) securely. Configure allowed hosts, debug mode, and static/media file paths per environment.
+
+# Test Strategy:
+Test settings loading by running the server with different environment variables. Ensure sensitive data is not exposed in source code.

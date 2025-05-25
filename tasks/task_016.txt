@@ -1,0 +1,11 @@
+# Task ID: 16
+# Title: Add Automated Testing and CI/CD Pipeline
+# Status: pending
+# Dependencies: 1, 2, 3, 4, 10
+# Priority: low
+# Description: Set up automated testing and continuous integration/deployment pipeline.
+# Details:
+Configure pytest for unit and integration tests. Add GitHub Actions or GitLab CI for automated testing and deployment. Include linting and security scanning.
+
+# Test Strategy:
+Run automated tests on code push. Verify test coverage and pipeline success.

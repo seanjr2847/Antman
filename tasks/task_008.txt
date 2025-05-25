@@ -1,0 +1,11 @@
+# Task ID: 8
+# Title: Build Web Scraping Engine with Selenium
+# Status: pending
+# Dependencies: 1, 2, 3, 4
+# Priority: medium
+# Description: Develop a web scraping engine using Selenium for automated login and menu navigation.
+# Details:
+Use Selenium (v4.0+) for headless browser automation. Implement selenium_manager.py and iframe_handler.py in core/scraper. Support project-specific login and IFRAME navigation. Store web credentials securely.
+
+# Test Strategy:
+Test automated login, IFRAME navigation, and menu access. Verify credential security and error handling.
