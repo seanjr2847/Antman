@@ -15,8 +15,31 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.http import JsonResponse
+
+# 헬스 체크 뷰 함수
+def health_check(request):
+    """헬스 체크 엔드포인트
+    
+    시스템의 상태를 확인하는 간단한 헬스 체크 엔드포인트입니다.
+    """
+    return JsonResponse({'status': 'ok'})
+
+# 홈페이지 뷰 함수
+def home(request):
+    """홈페이지 엔드포인트
+    
+    Antman 프로젝트의 기본 홈페이지를 제공합니다.
+    """
+    return JsonResponse({
+        'message': 'Antman 프로젝트에 오신 것을 환영합니다',
+        'version': '1.0.0',
+        'status': 'running'
+    })
 
 urlpatterns = [
+    path('', home, name='home'),  # 홈페이지 URL 추가
     path('admin/', admin.site.urls),
+    path('health/', health_check, name='health_check'),
 ]

@@ -52,6 +52,11 @@ DJANGO_APPS = [
 # 프로젝트 앱
 PROJECT_APPS = [
     'core',
+    'apps',  # 앱 디렉토리 자체를 등록
+    'core.error_handling',
+    'core.code_generation',
+    'core.middleware',
+    'core.code_quality',
     'apps.users',
     'apps.projects',
 ]
