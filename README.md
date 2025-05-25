@@ -21,74 +21,120 @@ Antman은 Django 기반의 확장 가능한 웹 애플리케이션 프레임워�
 ### 기술 스택
 
 ```mermaid
-architecture-beta
-  group application(cloud)[Antman 애플리케이션]
-    group backend(database)[Backend]
-      service django(server)[Django 4.2+]
-      service drf(server)[Django REST Framework]
-      service channels(server)[Django Channels]
-      service celery(server)[Celery]
-    end
-    group frontend(internet)[Frontend]
-      service templates(server)[Django Templates]
-      service htmx(server)[HTMX]
-      service alpine(server)[Alpine.js]
-      service tailwind(server)[Tailwind CSS]
-    end
-    group core_modules(disk)[Core Modules]
-      service codegen(server)[Code Generation]
-      service errors(server)[Error Handling]
-      service middleware(server)[Middleware]
-      service quality(server)[Code Quality]
-    end
-  end
-  
-  group data_storage(database)[Data Storage]
-    service postgres(database)[PostgreSQL]
-    service redis(database)[Redis]
-  end
-  
-  group infrastructure(cloud)[Infrastructure]
-    service docker(server)[Docker]
-    service compose(server)[Docker Compose]
-    service nginx(server)[Nginx]
-    service gitlab(server)[GitLab CI/CD]
-  end
-  
-  group testing(disk)[Testing & Quality]
-    service pytest(server)[pytest]
-    service ruff(server)[Ruff]
-    service black(server)[Black]
-    service isort(server)[isort]
-  end
-  
-  django:R --> L:drf
-  django:R --> L:channels
-  django:B --> T:celery
-  celery:B --> T:redis
-  channels:B --> T:redis
-  django:B --> T:postgres
-  
-  django:R --> L:templates
-  templates:R --> L:htmx
-  htmx:R --> L:alpine
-  templates:B --> T:tailwind
-  
-  codegen:T --> B:django
-  errors:T --> B:django
-  middleware:T --> B:django
-  quality:T --> B:testing
-  
-  docker:R --> L:compose
-  compose:R --> L:nginx
-  nginx:T --> B:django
-  gitlab:T --> B:docker
-  
-  infrastructure:T --> B:application
-  testing:T --> B:backend
+graph TB
+    %% Main Sections
+    Backend["Backend"] 
+    Frontend["Frontend"] 
+    CoreModules["Core Modules"] 
+    DataStorage["Data Storage"] 
+    Infrastructure["Infrastructure"] 
+    Testing["Testing & Quality"] 
+    
+    %% Backend Components
+    Django["Django 4.2+"] 
+    DRF["Django REST Framework"] 
+    Channels["Django Channels"] 
+    Celery["Celery"] 
+    
+    %% Frontend Components
+    Templates["Django Templates"] 
+    HTMX["HTMX"] 
+    Alpine["Alpine.js"] 
+    Tailwind["Tailwind CSS"] 
+    
+    %% Core Module Components
+    CodeGen["Code Generation"] 
+    ErrorHandling["Error Handling"] 
+    Middleware["Middleware"] 
+    CodeQuality["Code Quality"] 
+    
+    %% Data Storage Components
+    Postgres["PostgreSQL"] 
+    Redis["Redis"] 
+    
+    %% Infrastructure Components
+    Docker["Docker"] 
+    DockerCompose["Docker Compose"] 
+    Nginx["Nginx"] 
+    GitLab["GitLab CI/CD"] 
+    
+    %% Testing Components
+    Pytest["pytest"] 
+    Ruff["Ruff"] 
+    Black["Black"] 
+    Isort["isort"] 
+    
+    %% Main Sections Hierarchy
+    Backend --- Django
+    Backend --- DRF
+    Backend --- Channels
+    Backend --- Celery
+    
+    Frontend --- Templates
+    Frontend --- HTMX
+    Frontend --- Alpine
+    Frontend --- Tailwind
+    
+    CoreModules --- CodeGen
+    CoreModules --- ErrorHandling
+    CoreModules --- Middleware
+    CoreModules --- CodeQuality
+    
+    DataStorage --- Postgres
+    DataStorage --- Redis
+    
+    Infrastructure --- Docker
+    Infrastructure --- DockerCompose
+    Infrastructure --- Nginx
+    Infrastructure --- GitLab
+    
+    Testing --- Pytest
+    Testing --- Ruff
+    Testing --- Black
+    Testing --- Isort
+    
+    %% Connections
+    Django --> DRF
+    Django --> Channels
+    Django --> Celery
+    Celery --> Redis
+    Channels --> Redis
+    Django --> Postgres
+    
+    Django --> Templates
+    Templates --> HTMX
+    HTMX --> Alpine
+    Templates --> Tailwind
+    
+    CodeGen --> Django
+    ErrorHandling --> Django
+    Middleware --> Django
+    CodeQuality --> Testing
+    
+    Docker --> DockerCompose
+    DockerCompose --> Nginx
+    Nginx --> Django
+    GitLab --> Docker
+    
+    Infrastructure --> Backend
+    Testing --> Backend
+    
+    %% Styling
+    classDef backend fill:#d4f1f9,stroke:#05a5d1,stroke-width:2px;
+    classDef frontend fill:#e1d5e7,stroke:#9673a6,stroke-width:2px;
+    classDef storage fill:#d5e8d4,stroke:#82b366,stroke-width:2px;
+    classDef infra fill:#fff2cc,stroke:#d6b656,stroke-width:2px;
+    classDef testing fill:#f8cecc,stroke:#b85450,stroke-width:2px;
+    classDef core fill:#dae8fc,stroke:#6c8ebf,stroke-width:2px;
+    
+    %% Apply styles
+    class Backend,Django,DRF,Channels,Celery backend;
+    class Frontend,Templates,HTMX,Alpine,Tailwind frontend;
+    class DataStorage,Postgres,Redis storage;
+    class Infrastructure,Docker,DockerCompose,Nginx,GitLab infra;
+    class Testing,Pytest,Ruff,Black,Isort testing;
+    class CoreModules,CodeGen,ErrorHandling,Middleware,CodeQuality core;
 ```
-
-이 아키텍처 다이어그램은 Antman 프로젝트의 다양한 계층과 그 관계를 보여줍니다:
 
 #### 백엔드
 - **Django 4.2+**: 핵심 웹 프레임워크
