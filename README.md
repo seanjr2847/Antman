@@ -18,6 +18,98 @@ Antman은 Django 기반의 확장 가능한 웹 애플리케이션 프레임워�
 - **코드 품질**: 자동화된 코드 포맷팅 및 린팅
 - **CI/CD 파이프라인**: 자동화된 테스트, 빌드, 배포 과정
 
+### 기술 스택
+
+```mermaid
+architecture-beta
+  group application(cloud)[Antman 애플리케이션]
+    group backend(database)[Backend]
+      service django(server)[Django 4.2+]
+      service drf(server)[Django REST Framework]
+      service channels(server)[Django Channels]
+      service celery(server)[Celery]
+    end
+    group frontend(internet)[Frontend]
+      service templates(server)[Django Templates]
+      service htmx(server)[HTMX]
+      service alpine(server)[Alpine.js]
+      service tailwind(server)[Tailwind CSS]
+    end
+    group core_modules(disk)[Core Modules]
+      service codegen(server)[Code Generation]
+      service errors(server)[Error Handling]
+      service middleware(server)[Middleware]
+      service quality(server)[Code Quality]
+    end
+  end
+  
+  group data_storage(database)[Data Storage]
+    service postgres(database)[PostgreSQL]
+    service redis(database)[Redis]
+  end
+  
+  group infrastructure(cloud)[Infrastructure]
+    service docker(server)[Docker]
+    service compose(server)[Docker Compose]
+    service nginx(server)[Nginx]
+    service gitlab(server)[GitLab CI/CD]
+  end
+  
+  group testing(disk)[Testing & Quality]
+    service pytest(server)[pytest]
+    service ruff(server)[Ruff]
+    service black(server)[Black]
+    service isort(server)[isort]
+  end
+  
+  django:R --> L:drf
+  django:R --> L:channels
+  django:B --> T:celery
+  celery:B --> T:redis
+  channels:B --> T:redis
+  django:B --> T:postgres
+  
+  django:R --> L:templates
+  templates:R --> L:htmx
+  htmx:R --> L:alpine
+  templates:B --> T:tailwind
+  
+  codegen:T --> B:django
+  errors:T --> B:django
+  middleware:T --> B:django
+  quality:T --> B:testing
+  
+  docker:R --> L:compose
+  compose:R --> L:nginx
+  nginx:T --> B:django
+  gitlab:T --> B:docker
+  
+  infrastructure:T --> B:application
+  testing:T --> B:backend
+```
+
+이 아키텍처 다이어그램은 Antman 프로젝트의 다양한 계층과 그 관계를 보여줍니다:
+
+#### 백엔드
+- **Django 4.2+**: 핵심 웹 프레임워크
+- **Django REST Framework**: RESTful API 구현
+- **Django Channels**: 비동기 통신 지원
+- **Celery**: 비동기 태스크 처리
+- **PostgreSQL**: 기본 데이터베이스
+- **Redis**: 캩0싱 및 비동기 통신 처리
+
+#### 프론트엔드
+- **Django Templates**: 기본 템플릿 엔진
+- **HTMX**: 클라이언트 사이드 인터랙션
+- **Alpine.js**: 경량 JavaScript 프레임워크
+- **Tailwind CSS**: 유틸리티 기반 CSS 프레임워크
+
+#### 인프라 및 배포
+- **Docker**: 컨테이너화
+- **Docker Compose**: 멀티 컨테이너 관리
+- **Nginx**: 웹 서버 및 로드 밸런서
+- **GitLab CI/CD**: 자동화된 배포 파이프라인
+
 # 설치
 
 ### 요구 사항
