@@ -9,6 +9,7 @@ description: All workflow
 Present an overview of what you will do.
 Do not generate any code until I tell you to proceed.
 All answer should be in Korean.
+Write Annotation With Korean.
 '''
 
 ## 2. Complete Workflow Execution
